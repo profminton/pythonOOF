@@ -9,6 +9,8 @@
 !cmake/
 !cmake/Modules/
 !cmake/Modules/*.cmake
+!examples/
+!examples/**.py
 !*.f90
 !.gitignore
 !CMakeLists.txt

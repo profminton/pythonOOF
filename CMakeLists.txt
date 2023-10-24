@@ -1,13 +1,13 @@
 # Copyright 2023 - David Minton
-# This file is part of Pyoof.
-# Pyoof is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License 
+# This file is part of PyOOF.
+# PyOOF is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License 
 # as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-# Pyoof is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty 
+# PyOOF is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty 
 # of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# You should have received a copy of the GNU General Public License along with Pyoof. 
+# You should have received a copy of the GNU General Public License along with PyOOF. 
 # If not, see: https://www.gnu.org/licenses. 
 
-# CMake project file for Pyoof
+# CMake project file for PyOOF
 ##################################################
 # Define the project and the depencies that it has
 ##################################################
@@ -100,7 +100,7 @@ INCLUDE(SetParallelizationLibrary)
 IF (COMPILER_OPTIONS STREQUAL "Intel" AND NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
     INCLUDE(SetMKL)
 ENDIF ()
-INCLUDE(SetPyoofFlags) 
+INCLUDE(SetPyOOFFlags) 
 
 # The source for the PYOOF binary and have it placed in the bin folder
 ADD_SUBDIRECTORY(${SRC} ${CMAKE_INSTALL_BINDIR})

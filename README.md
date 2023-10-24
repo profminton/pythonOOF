@@ -1,2 +1,3 @@
-# pythonOOF
-An example of a project that allows Python to use an Object Oriented Fortran derived-type with allocatable components.
+# PythonOOF
+## Communicate complex Object Oriented Fortran derived-types to Python and back again.
+

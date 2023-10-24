@@ -83,25 +83,6 @@ ELSE ()
     MESSAGE(STATUS "DO CONCURRENT does not support locality-spec")
 ENDIF (DOCONLOC_WORKS)
 
-# Check to see if quad precision is supported
-SET(TESTFILE "${CMAKE_BINARY_DIR}/${CMAKE_FILES_DIRECTORY}")
-SET(TESTFILE "${TESTFILE}/CMakeTmp/testFortranQuadPrecisionReal.f90")
-FILE(WRITE "${TESTFILE}"
-"
-program TestQuadPrecisionReal
-integer, parameter :: QP = selected_Real_kind(30) 
-real(QP) :: x
-end program TestQuadPrecisionReal
-")
-TRY_COMPILE(QUADPREC ${CMAKE_BINARY_DIR} ${TESTFILE} COMPILE_DEFINITIONS "${CMAKE_Fortran_FLAGS}" OUTPUT_VARIABLE OUTPUT)
-IF (QUADPREC)
-    MESSAGE(STATUS "Quad precision real is supported")
-    TARGET_COMPILE_DEFINITIONS(${PYOOF_DRIVER} PRIVATE -DQUADPREC)
-ELSE ()
-    MESSAGE(STATUS "Quad precision real is not supported")
-ENDIF ()
-
-
 #####################################
 # Tell how to install this executable
 #####################################

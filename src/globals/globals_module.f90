@@ -12,7 +12,6 @@ module globals
    !! author: David A. Minton
    !!
    !! Basic parameters, definitions, and global type definitions used throughout the PyOOF project
-   !! Adapted from David E. Kaufmann's Swifter routine: globals.f90 and module_swifter.f90
    use, intrinsic :: iso_c_binding  ! Use the intrinsic kind definitions
    implicit none
    public

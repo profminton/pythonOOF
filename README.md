@@ -1,6 +1,6 @@
 # PythonOOF: Bridging Python and Modern Fortran OOP
 
-PythonOOF is an innovative software bridge facilitating seamless interaction between Python class objects and Modern Fortran's derived-type classes, focusing especially on those with allocatable array components and type-bound procedures. This repository is perfect for users who wish to leverage both the ease of Python and the computational efficiency of Fortran in an object-oriented fashion.
+PythonOOF is a working example of how one could go about building a software bridge facilitating seamless interaction between Python class objects and Modern Fortran's derived-type classes, focusing especially on those with allocatable array components and type-bound procedures. 
 
 ## Key Features
 

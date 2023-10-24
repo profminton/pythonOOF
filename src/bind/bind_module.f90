@@ -7,7 +7,19 @@
 !! You should have received a copy of the GNU General Public License along with pyoof. 
 !! If not, see: https://www.gnu.org/licenses. 
 
+
+
 module bind_module
+   !! author: David A. Minton
+   !!
+   !! This module defines the set of routines that connect the Cython code to the Fortran. Because Fortran derived types with
+   !! allocatable arrays and type-bound procedures are not interoperable with C, you have to write a set of functions that allow
+   !! you to access the Fortran structures. On the Fortran side, you can make use of the full suite of OOF features from F2003+ 
+   !! e.g. classes, inheritence, polymorphism, type-bound procedures, etc., but any communication back to Python must be done 
+   !! via a set of binding functions. 
+   !! 
+   !! The following implementation was adapted from _Modern Fortran Explained: Incorporating Fortran 2018_ by Metcalf, Reid, & 
+   !! Cohen (see Fig. 19.8)
    use iso_c_binding
    use globals
    use surface

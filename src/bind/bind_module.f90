@@ -36,11 +36,11 @@ contains
       bind_simulation_init = c_loc(sim_ptr)
    end function bind_simulation_init
 
-   subroutine bind_simulation_final(surf) bind(c)
-      type(c_ptr), intent(in), value :: surf
+   subroutine bind_simulation_final(sim) bind(c)
+      type(c_ptr), intent(in), value :: sim
       type(simulation_type), pointer :: sim_ptr
 
-      call c_f_pointer(surf, sim_ptr)
+      call c_f_pointer(sim, sim_ptr)
       deallocate(sim_ptr)
    end subroutine bind_simulation_final
 

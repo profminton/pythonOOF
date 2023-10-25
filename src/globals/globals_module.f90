@@ -27,4 +27,6 @@ module globals
 
    character(*), parameter :: VERSION = "2023.10.0" !! Cratermaker version
 
+   integer(I4B), parameter :: STRMAX = 512 !! Maximum size of character strings 
+
 end module globals

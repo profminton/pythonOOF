@@ -28,6 +28,10 @@ module bind_module
 contains
 
    type(c_ptr) function bind_simulation_init(gridsize) bind(c)
+      !! author: David A. Minton
+      !!
+      !! This function is used to initialize the simulation_type derived type object in Fortran and return a pointer to the object 
+      !! that can be used as a struct in C, and ultimately to the Python class object via Cython.
       integer(I4B), value :: gridsize
       type(simulation_type), pointer :: sim_ptr
 
@@ -37,12 +41,71 @@ contains
    end function bind_simulation_init
 
    subroutine bind_simulation_final(sim) bind(c)
+      !! author: David A. Minton
+      !!
+      !! This subroutine is used to deallocate the pointer that links the C struct to the Fortran derived type object. 
       type(c_ptr), intent(in), value :: sim
       type(simulation_type), pointer :: sim_ptr
 
       call c_f_pointer(sim, sim_ptr)
       deallocate(sim_ptr)
    end subroutine bind_simulation_final
+
+
+   subroutine bind_c2f_string(c_string, f_string)
+      !! author: David A. Minton
+      !!
+      !! This subroutine is used to convert C style strings into Fortran. This allows one to pass Python strings as arguments to 
+      !! Fortran functions.
+      implicit none
+      ! Arguments
+      character(len=1,kind=c_char),              intent(in)  :: c_string(*)
+      character(len=:),             allocatable, intent(out) :: f_string
+      ! Internals
+      integer :: i
+      character(len=STRMAX) :: tmp_string
+
+      i=1
+      tmp_string = ''
+      do while(c_string(i) /= c_null_char .and. i <= STRMAX)
+         tmp_string(i:i) = c_string(i)
+         i=i+1
+      end do
+
+      if (i > 1) then
+         f_string = trim(tmp_string)
+      else
+         f_string = ""
+      end if
+
+      return
+   end subroutine bind_c2f_string
+
+
+   subroutine bind_f2c_string(f_string, c_string)
+      !! author: David A. Minton
+      !!
+      !! This subroutine is used to convert Fortran style strings to C. This allows the Python module to read strings that were 
+      !! created in Fortran procedures.
+      implicit none
+      ! Arguments
+      character(len=:),          allocatable, intent(in)  :: f_string
+      character(len=1,kind=c_char),              intent(out) :: c_string(*)
+      ! Internals
+      integer :: i, len_f
+   
+      len_f = len_trim(f_string)
+      
+      do i = 1, len_f
+         c_string(i) = f_string(i:i)
+      end do
+   
+      ! Append null character
+      c_string(len_f + 1) = c_null_char
+   
+      return
+   end subroutine bind_f2c_string
+   
 
 
 end module bind_module

@@ -10,6 +10,49 @@ PythonOOF is a working example of how one could go about building a software bri
 - **Cython Integration**: PythonOOF uses Cython for smooth data interchange between Python and Fortran, eliminating the need for f2py.
 - **CMAKE & scikit-build-core**: The build process is managed through CMAKE, integrated with scikit-build-core, simplifying the compilation and installation process.
 
+## PythonOOF Project Structure
+
+- 📄 **CMakeLists.txt** - Main CMake configuration file.
+- 📄 **LICENSE** - Project license information.
+- 🖼 **PyOOF_Programmers_at_work.png** - Totally accurate picture of what it's like to develop software in a mixed Fortran/Python environment.
+- 📄 **README.md** - Project documentation and overview.
+- 📁 **cmake**
+  - Project-specific CMake modules.
+  - 📁 **Modules**
+    - 📄 **FindCoarray_Fortran.cmake** - Determine compiler flags to use Coarray Fortran parallelization.
+    - 📄 **FindMKL.cmake** - Locate the Intel MKL library.
+    - 📄 **FindOpenMP_Fortran.cmake** - Determine compiler flags to use OpenMP parallelization.
+    - 📄 **SetCompilerFlag.cmake** - Determine whether a particular compiler flag is valid by testing each one individually.
+    - 📄 **SetParallelizationLibrary.cmake** - Configure the parallelization options and find any and all appropriate libraries.
+    - 📄 **SetPyOOFFlags.cmake** - The complete set of possible compiler flags, for various combinations of compilers, operating systems, and build configurations (Release, Debug, Testing, Profiling).
+- 📄 **distclean.cmake** - Script for cleaning up build artifacts.
+- 📁 **examples**
+  - Sample scripts demonstrating project usage.
+  - 📄 **basic_operation.py** - An example to demonstrate the basic functionality of the PythonOOF project.
+- 📁 **pyoof**
+  - Python module main folder.
+  - 📄 **CMakeLists.txt** - CMake config for Python module.
+  - 📄 **__init__.py** - Python package initializer.
+  - 📄 **_bindings.h** - Header file for Cython bindings.
+  - 📄 **_bindings.pyx** - Cython file for Python bindings.
+  - 📄 **simulation.py** - Python script that defines a main class for a notional project.  
+- 📄 **pyproject.toml** - Python project metadata and build tool config.
+- 📁 **src**
+  - Fortran source files.
+  - 📄 **CMakeLists.txt** - CMake config for source directory.
+  - 📁 **bind**
+    - 📄 **bind_module.f90** - Defines the C to Fortran bindings that allow the Python module to interface with the Fortran derived type.
+  - 📁 **globals**
+    - 📄 **globals_module.f90** - Defines global variables, including variable data types and the project version.
+    - 📄 **globals_module.f90.in** - A configuration file used by CMake in order to automatically set the project version based on the value in the pyproject.toml file at the time the project is built.
+  - 📁 **surface**
+    - 📄 **surface_module.f90** - Defines a derived type that contains the allocatable arrays and type-bound procedures that are manipulated with the Python module.
+- 📄 **version.txt** - Current version of the project.
+
+
+
+
+
 ## Installation
 
 PythonOOF requires a working Python environment, a Fortran compiler, and CMAKE installed on your system.

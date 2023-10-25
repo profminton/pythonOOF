@@ -25,7 +25,7 @@ IF (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.27")
 ENDIF ()
 
 # Set some options the user may choose
-OPTION(USE_COARRAY "Use Coarray Fortran for parallelization of test particles" OFF)
+OPTION(USE_COARRAY "Use Coarray Fortran for parallelization" OFF)
 OPTION(USE_OPENMP "Use OpenMP for parallelization" ON)
 OPTION(USE_SIMD "Use SIMD vectorization" ON)
 OPTION(BUILD_SHARED_LIBS "Build using shared libraries" ON)
@@ -98,8 +98,9 @@ ENDIF(NOT CMAKE_Fortran_COMPILER_SUPPORTS_F90)
 INCLUDE(SetParallelizationLibrary)
 
 IF (COMPILER_OPTIONS STREQUAL "Intel" AND NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    INCLUDE(SetMKL)
-ENDIF ()
+    FIND_PACKAGE(MKL REQUIRED)
+ENDIF()
+
 INCLUDE(SetPyOOFFlags) 
 
 # The source for the PYOOF binary and have it placed in the bin folder

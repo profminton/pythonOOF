@@ -8,5 +8,5 @@ class Simulation:
     it in from a file (default name is pyoof.in). It also creates the directory structure needed to store simulation
     files if necessary.
     """
-    def __init__(self, param_file="pyoof.in", isnew=True):
+    def __init__(self, param_file="pyoof.json", isnew=True):
         currentdir = os.getcwd()

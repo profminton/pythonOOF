@@ -22,27 +22,27 @@ module bind_module
    !! Cohen (see Fig. 19.8)
    use iso_c_binding
    use globals
-   use surface
+   use simulation
    implicit none
 
 contains
 
-   type(c_ptr) function bind_surface_init(gridsize) bind(c)
+   type(c_ptr) function bind_simulation_init(gridsize) bind(c)
       integer(I4B), value :: gridsize
-      type(surface_type), pointer :: surf_ptr
+      type(simulation_type), pointer :: sim_ptr
 
-      allocate(surf_ptr)
-      call surf_ptr%allocate(gridsize) 
-      bind_surface_init = c_loc(surf_ptr)
-   end function bind_surface_init
+      allocate(sim_ptr)
+      call sim_ptr%allocate(gridsize) 
+      bind_simulation_init = c_loc(sim_ptr)
+   end function bind_simulation_init
 
-   subroutine bind_surface_final(surf) bind(c)
+   subroutine bind_simulation_final(surf) bind(c)
       type(c_ptr), intent(in), value :: surf
-      type(surface_type), pointer :: surf_ptr
+      type(simulation_type), pointer :: sim_ptr
 
-      call c_f_pointer(surf, surf_ptr)
-      deallocate(surf_ptr)
-   end subroutine bind_surface_final
+      call c_f_pointer(surf, sim_ptr)
+      deallocate(sim_ptr)
+   end subroutine bind_simulation_final
 
 
 end module bind_module

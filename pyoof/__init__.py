@@ -10,4 +10,3 @@
 """
 
 from .simulation import Simulation
-from ._bindings import Surface

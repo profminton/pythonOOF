@@ -7,62 +7,62 @@
 !! You should have received a copy of the GNU General Public License along with pyoof. 
 !! If not, see: https://www.gnu.org/licenses. 
 
-module surface
+module simulation
    use globals
 
-   type  :: surface_type
-      real(DP), dimension(:,:), allocatable :: elev  ! surface elevation
+   type  :: simulation_type
+      real(DP), dimension(:,:), allocatable :: doublevar  ! simulation elevation
    contains
-      procedure :: allocate   => surface_allocate   !! Allocate the allocatable components of the class
-      procedure :: deallocate => surface_deallocate !! Deallocate all allocatable components of the class
-      final     ::               surface_final      !! Finalizer (calls deallocate)
-   end type surface_type
+      procedure :: allocate   => simulation_allocate   !! Allocate the allocatable components of the class
+      procedure :: deallocate => simulation_deallocate !! Deallocate all allocatable components of the class
+      final     ::               simulation_final      !! Finalizer (calls deallocate)
+   end type simulation_type
 
 
 contains
 
-   subroutine surface_allocate(self, gridsize)
+   subroutine simulation_allocate(self, gridsize)
       !! author: David A. Minton
       !!
       !! Allocate the allocatable components of the class
       implicit none
       ! Arguments
-      class(surface_type), intent(inout) :: self     !! Surface object
+      class(simulation_type), intent(inout) :: self     !! Simulation object
       integer(I4B),        intent(in)    :: gridsize !! Size of the grid
 
-      allocate(self%elev(gridsize,gridsize))
+      allocate(self%doublevar(gridsize,gridsize))
 
-      self%elev(:,:) = -1.0_DP
+      self%doublevar(:,:) = -1.0_DP
 
       return
-   end subroutine surface_allocate
+   end subroutine simulation_allocate
 
 
-   subroutine surface_deallocate(self) 
+   subroutine simulation_deallocate(self) 
       !! author: David A. Minton
       !!
       !! Deallocate the allocatable components of the class
       implicit none
       ! Arguments
-      class(surface_type), intent(inout) :: self     !! Surface object
+      class(simulation_type), intent(inout) :: self     !! Simulation object
 
-      deallocate(self%elev)
+      deallocate(self%doublevar)
 
       return
-   end subroutine surface_deallocate
+   end subroutine simulation_deallocate
 
 
-   subroutine surface_final(self)
+   subroutine simulation_final(self)
       !! author: David A. Minton
       !!
-      !! Finalizer for the surface object
+      !! Finalizer for the simulation object
       implicit none
       ! Arguments
-      type(surface_type), intent(inout) :: self
+      type(simulation_type), intent(inout) :: self
 
       call self%deallocate()
       return
-   end subroutine surface_final
+   end subroutine simulation_final
 
 
-end module surface
+end module simulation

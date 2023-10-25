@@ -15,7 +15,7 @@ CONFIGURE_FILE(${GLOBAL_MODULE_IN} ${GLOBAL_MODULE_OUT})
 # Add the source files
 SET(SRC_FILES
     ${SRC}/globals/globals_module.f90
-    ${SRC}/surface/surface_module.f90
+    ${SRC}/simulation/simulation_module.f90
     ${SRC}/bind/bind_module.f90
     ${SRC}/driver_module.f90
 )

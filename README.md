@@ -33,9 +33,8 @@ PythonOOF is a working example of how one could go about building a software bri
   - Python module main folder.
   - 📄 **CMakeLists.txt** - CMake config for Python module.
   - 📄 **__init__.py** - Python package initializer.
-  - 📄 **_bindings.h** - Header file for Cython bindings.
-  - 📄 **_bindings.pyx** - Cython file for Python bindings.
-  - 📄 **simulation.py** - Python script that defines a main class for a notional project.  
+  - 📄 **simulation.h** - Header file for Cython bindings.
+  - 📄 **simulation.pyx** - Cython file for Python bindings and defines a class called Simulation to be used in a notional project
 - 📄 **pyproject.toml** - Python project metadata and build tool config.
 - 📁 **src**
   - Fortran source files.
@@ -45,12 +44,9 @@ PythonOOF is a working example of how one could go about building a software bri
   - 📁 **globals**
     - 📄 **globals_module.f90** - Defines global variables, including variable data types and the project version.
     - 📄 **globals_module.f90.in** - A configuration file used by CMake in order to automatically set the project version based on the value in the pyproject.toml file at the time the project is built.
-  - 📁 **surface**
-    - 📄 **surface_module.f90** - Defines a derived type that contains the allocatable arrays and type-bound procedures that are manipulated with the Python module.
+  - 📁 **simulation**
+    - 📄 **simulation_module.f90** - Defines a derived type that contains the allocatable arrays and type-bound procedures that are manipulated with the Python module.
 - 📄 **version.txt** - Current version of the project.
-
-
-
 
 
 ## Installation
@@ -75,25 +71,25 @@ A basic example of how the code operates is included in `pythonOOF/examples`
 
 ```python
 import numpy as np
-from pyoof import Surface  
+from pyoof import Simulation  
 
 # Define grid size
 gridsize = 3
 
-# Create a Surface object
-surface = Surface(gridsize)
-init_vals = surface.get_elev()
+# Create a Simulation object
+simulation = Simulation(gridsize)
+init_vals = simulation.get_doublevar()
 print("Initialized values should be all -1.0 as set by the Fortran side")
 print(init_vals)
 
 # Create a NumPy array for elevation data
 elev_data = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]], dtype=np.float64)
 
-# Set the elevation data using the set_elev method
-surface.set_elev(elev_data)
+# Set the elevation data using the set_doublevar method
+simulation.set_doublevar(elev_data)
 
-# Retrieve and print the elevation data using the get_elev method
-retrieved_elev_data = surface.get_elev()
+# Retrieve and print the elevation data using the get_doublevar method
+retrieved_elev_data = simulation.get_doublevar()
 print("Elevation Data:")
 print(retrieved_elev_data)
 

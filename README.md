@@ -48,6 +48,9 @@ PythonOOF is a working example of how one could go about building a software bri
     - 📄 **simulation_module.f90** - Defines a derived type that contains the allocatable arrays and type-bound procedures that are manipulated with the Python module.
 - 📄 **version.txt** - Current version of the project.
 
+## How it works
+PythonOOF is a complete project that can be built and installed using a simple `pip install .` command, and therefore contains a number of files that are not strictly relevant to the Python-Fortran bridge.
+This section will focus on only those components of the project
 
 ## Installation
 

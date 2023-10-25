@@ -3,11 +3,6 @@ name = "pyoof"
 version = "2023.10.0"
 authors=[
     {name = 'David A. Minton', email='daminton@purdue.edu'},
-    {name = 'James E. Richardson'},
-    {name = 'Ya Huei Huang'},
-    {name = 'Masatoshi Hirabayashi'},
-    {name = 'Austin Blevins'},
-    {name = 'Jun Du'}
 ]
 maintainers = [
     {name = 'David A. Minton', email='daminton@purdue.edu'},
@@ -16,19 +11,20 @@ readme = "README.md"
 requires-python=">=3.8"
 license={file = "LICENSE"}
 classifiers=[
-'Development Status :: 3 - Alpha',
+'Development Status :: 1 - Planning',
 'Intended Audience :: Science/Research',
-'Topic :: Scientific/Engineering :: Astronomy',
+'Topic :: Software Development',
 'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
 'Programming Language :: Python :: 3',
+'Programming Language :: Fortran',
+'Operating System :: MacOS',
+'Operating System :: POSIX :: Linux',
 ]
-keywords=['astronomy','astrophysics', 'planetary', 'monte carlo',  'moon', 'landscape evolution']
+description = "PythonOOF is a working example of how one could go about building a software bridge facilitating seamless interaction between Python class objects and Modern Fortran's derived-type classes, focusing especially on those with allocatable array components and type-bound procedures."
+keywords = ["Python", "Fortran", "Integration", "Software Bridge", "Derived-Type Classes", "Allocatable Arrays", "Type-Bound Procedures", "Interoperability", "Cython", "Object-Oriented Fortran", "Bindings", "API Design"]
 dependencies = [
-    'numpy>=1.24.3',
-    'scipy>=1.10.1',
-    'matplotlib>=3.7',
+    'numpy>=1.26.1',
     'cython>=3.0.0',
-    'mkdocs>=1.5.3'
 ]
 
 [project.urls]
@@ -38,7 +34,7 @@ Repository = 'https://github.com/profminton/pyoof.git'
 requires = [
     "scikit-build-core",
     "cython>=3.0.0",
-    'numpy>=1.24.3',
+    'numpy>=1.26.1',
     "pytest",
 ]
 build-backend = "scikit_build_core.build"

@@ -11,8 +11,8 @@ module simulation
    use globals
 
    type  :: simulation_type
-      character(len=STRMAX,kind=c_char)     :: stringvar    !! A placeholder for a string component variable
       real(DP), dimension(:,:), allocatable :: doublevar    !! A placeholder 2D array. 
+      character(len=STRMAX,kind=c_char)     :: stringvar    !! A placeholder for a string component variable
    contains
       procedure :: allocate   => simulation_allocate   !! Allocate the allocatable components of the class
       procedure :: deallocate => simulation_deallocate !! Deallocate all allocatable components of the class
@@ -36,6 +36,7 @@ contains
       self%doublevar(:,:) = -1.0_DP
       write(self%stringvar,*) "Initialized in Fortran"
 
+      write(*,*) trim(adjustl(self%stringvar))
       write(*,*) "The shape is: ", shape(self%doublevar)
 
       return

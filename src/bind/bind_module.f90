@@ -8,7 +8,6 @@
 !! If not, see: https://www.gnu.org/licenses. 
 
 
-
 module bind_module
    !! author: David A. Minton
    !!
@@ -27,43 +26,54 @@ module bind_module
 
 contains
 
-   type(c_ptr) function bind_simulation_init(gridsize) bind(c)
+   type(c_ptr) function bind_simulation_init(ny,nx) bind(c)
       !! author: David A. Minton
       !!
       !! This function is used to initialize the simulation_type derived type object in Fortran and return a pointer to the object 
       !! that can be used as a struct in C, and ultimately to the Python class object via Cython.
-      integer(I4B), value :: gridsize
-      type(simulation_type), pointer :: sim_ptr
+      implicit none
+      ! Arguments
+      integer(I4B),          value   :: ny, nx   !! The dimensions of the array to create. Note, this expects row-major ordering 
+      ! Internals
+      type(simulation_type), pointer :: sim_ptr  !! 
 
       allocate(sim_ptr)
-      call sim_ptr%allocate(gridsize) 
+      call sim_ptr%allocate(nx, ny) 
       bind_simulation_init = c_loc(sim_ptr)
+
+      return
    end function bind_simulation_init
+
 
    subroutine bind_simulation_final(sim) bind(c)
       !! author: David A. Minton
       !!
       !! This subroutine is used to deallocate the pointer that links the C struct to the Fortran derived type object. 
+      implicit none
+      ! Arguments
       type(c_ptr), intent(in), value :: sim
+      ! Internals
       type(simulation_type), pointer :: sim_ptr
 
       call c_f_pointer(sim, sim_ptr)
       deallocate(sim_ptr)
+
+      return
    end subroutine bind_simulation_final
 
 
-   subroutine bind_c2f_string(c_string, f_string)
+   subroutine bind_c2f_string(c_string, f_string) bind(c)
       !! author: David A. Minton
       !!
       !! This subroutine is used to convert C style strings into Fortran. This allows one to pass Python strings as arguments to 
       !! Fortran functions.
       implicit none
       ! Arguments
-      character(len=1,kind=c_char),              intent(in)  :: c_string(*)
-      character(len=:),             allocatable, intent(out) :: f_string
+      character(len=1,kind=c_char), intent(in)  :: c_string(*)
+      character(len=*,kind=c_char), intent(out) :: f_string
       ! Internals
       integer :: i
-      character(len=STRMAX) :: tmp_string
+      character(len=STRMAX,kind=c_char) :: tmp_string
 
       i=1
       tmp_string = ''
@@ -82,15 +92,15 @@ contains
    end subroutine bind_c2f_string
 
 
-   subroutine bind_f2c_string(f_string, c_string)
+   subroutine bind_f2c_string(f_string, c_string) bind(c)
       !! author: David A. Minton
       !!
       !! This subroutine is used to convert Fortran style strings to C. This allows the Python module to read strings that were 
       !! created in Fortran procedures.
       implicit none
       ! Arguments
-      character(len=:),          allocatable, intent(in)  :: f_string
-      character(len=1,kind=c_char),              intent(out) :: c_string(*)
+      character(len=*,kind=c_char), intent(in)  :: f_string
+      character(len=1,kind=c_char), intent(out) :: c_string(*)
       ! Internals
       integer :: i, len_f
    
@@ -106,6 +116,4 @@ contains
       return
    end subroutine bind_f2c_string
    
-
-
 end module bind_module

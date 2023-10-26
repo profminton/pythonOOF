@@ -421,6 +421,13 @@ IF (CMAKE_BUILD_TYPE STREQUAL "DEBUG" OR CMAKE_BUILD_TYPE STREQUAL "TESTING" )
         SET_COMPILE_FLAG(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}"
             C "-Wextra" # GNU
         )
+        # Issue warnings for uses of extensions to C/Fortran
+        SET_COMPILE_FLAG(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG}"
+            Fortran "-pedantic" # GNU
+        )
+        SET_COMPILE_FLAG(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}"
+            C "-pedantic" # GNU
+        )
         # Disable the warning that arrays may be uninitialized, which comes up due to a known bug in gfortran
         SET_COMPILE_FLAG(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG}"
             Fortran "-Wno-maybe-uninitialized" # GNU

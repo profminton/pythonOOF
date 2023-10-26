@@ -11,7 +11,8 @@ module simulation
    use globals
 
    type  :: simulation_type
-      real(DP), dimension(:,:), allocatable :: doublevar  ! simulation elevation
+      character(len=STRMAX,kind=c_char)     :: stringvar    !! A placeholder for a string component variable
+      real(DP), dimension(:,:), allocatable :: doublevar    !! A placeholder 2D array. 
    contains
       procedure :: allocate   => simulation_allocate   !! Allocate the allocatable components of the class
       procedure :: deallocate => simulation_deallocate !! Deallocate all allocatable components of the class
@@ -21,18 +22,21 @@ module simulation
 
 contains
 
-   subroutine simulation_allocate(self, gridsize)
+   subroutine simulation_allocate(self, nx, ny)
       !! author: David A. Minton
       !!
       !! Allocate the allocatable components of the class
       implicit none
       ! Arguments
-      class(simulation_type), intent(inout) :: self     !! Simulation object
-      integer(I4B),        intent(in)    :: gridsize !! Size of the grid
+      class(simulation_type), intent(inout) :: self   !! Simulation object
+      integer(I4B),           intent(in)    :: nx, ny !! Size of the grid
 
-      allocate(self%doublevar(gridsize,gridsize))
+      allocate(self%doublevar(nx,ny))
 
       self%doublevar(:,:) = -1.0_DP
+      write(self%stringvar,*) "Initialized in Fortran"
+
+      write(*,*) "The shape is: ", shape(self%doublevar)
 
       return
    end subroutine simulation_allocate

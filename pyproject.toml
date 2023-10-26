@@ -23,7 +23,7 @@ classifiers=[
 description = "PythonOOF is a working example of how one could go about building a software bridge facilitating seamless interaction between Python class objects and Modern Fortran's derived-type classes, focusing especially on those with allocatable array components and type-bound procedures."
 keywords = ["Python", "Fortran", "Integration", "Software Bridge", "Derived-Type Classes", "Allocatable Arrays", "Type-Bound Procedures", "Interoperability", "Cython", "Object-Oriented Fortran", "Bindings", "API Design"]
 dependencies = [
-    'numpy>=1.26.1',
+    'numpy>=1.20',
     'cython>=3.0.0',
 ]
 
@@ -34,7 +34,7 @@ Repository = 'https://github.com/profminton/pyoof.git'
 requires = [
     "scikit-build-core",
     "cython>=3.0.0",
-    'numpy>=1.26.1',
+    'numpy>=1.20',
     "pytest",
 ]
 build-backend = "scikit_build_core.build"

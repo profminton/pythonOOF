@@ -10,7 +10,7 @@
 module driver
    contains
 
-   module subroutine pyoof_driver()
+   subroutine pyoof_driver()
       !! author: David A. Minton
       !!
       !! This just verifies that we can create an executable using the library.

@@ -26,7 +26,7 @@ module bind_module
 
 contains
 
-  type(c_ptr) function bind_simulation_init(ny,nx) bind(c)
+   type(c_ptr) function bind_simulation_init(ny,nx) bind(c)
       !! author: David A. Minton
       !!
       !! This function is used to initialize the simulation_type derived type object in Fortran and return a pointer to the object 
@@ -149,7 +149,7 @@ contains
       implicit none
       ! Arguments
       character(kind=c_char), dimension(*), intent(in)  :: c_string
-      character(len=:,kind=c_char), allocatable, intent(out) :: f_string
+      character(len=:), allocatable, intent(out) :: f_string
       ! Internals
       integer :: i
       character(len=STRMAX,kind=c_char) :: tmp_string
@@ -177,7 +177,7 @@ contains
       !! This subroutine is used to convert Fortran style strings to C. This allows the Python module to read strings that were 
       !! created in Fortran procedures.
       implicit none
-      character(len=:, kind=c_char), allocatable, intent(in) :: fstr
+      character(len=:), allocatable, intent(in) :: fstr
       character(kind=c_char), dimension(:), allocatable, target, intent(out) :: cstr
          
       integer :: n, i

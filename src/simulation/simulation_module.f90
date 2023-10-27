@@ -11,8 +11,8 @@ module simulation
    use globals
 
    type  :: simulation_type
-      real(DP), dimension(:,:),     allocatable :: doublevar    !! A placeholder 2D array. 
-      character(len=:,kind=c_char), allocatable :: stringvar    !! A placeholder for a string component variable
+      real(DP), dimension(:,:), allocatable :: doublevar    !! A placeholder 2D array. 
+      character(len=:),         allocatable :: stringvar    !! A placeholder for a string component variable
    contains
       procedure :: allocate   => simulation_allocate   !! Allocate the allocatable components of the class
       procedure :: deallocate => simulation_deallocate !! Deallocate all allocatable components of the class

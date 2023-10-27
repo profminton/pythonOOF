@@ -26,7 +26,7 @@ module bind_module
 
 contains
 
-   type(c_ptr) function bind_simulation_init(ny,nx) bind(c)
+  type(c_ptr) function bind_simulation_init(ny,nx) bind(c)
       !! author: David A. Minton
       !!
       !! This function is used to initialize the simulation_type derived type object in Fortran and return a pointer to the object 
@@ -35,11 +35,25 @@ contains
       ! Arguments
       integer(I4B),          value   :: ny, nx   !! The dimensions of the array to create. Note, this expects row-major ordering 
       ! Internals
-      type(simulation_type), pointer :: sim_ptr  !! 
+      type(simulation_type), pointer :: sim_ptr  !! A pointer to the simulation type variable that will be passed to Cython
+      integer(I4B) :: i
 
       allocate(sim_ptr)
       call sim_ptr%allocate(nx, ny) 
       bind_simulation_init = c_loc(sim_ptr)
+
+      write(*,*) 
+      write(*,*) "***************** FORTRAN *******************"
+      write(*,*) "Inside bind_simulation_init" 
+      write(*,*) "stringvar       : ",trim(adjustl(sim_ptr%stringvar))
+      write(*,*) "len(stringvar)  : ",len(sim_ptr%stringvar)
+      write(*,*) "doublevar       : "
+      do i = 1,ny
+         write(*,*) sim_ptr%doublevar(:,i)
+      end do
+      write(*,*) "shape(doublevar): ", shape(sim_ptr%doublevar)
+      write(*,*) "*************** END FORTRAN *****************"
+      write(*,*) 
 
       return
    end function bind_simulation_init

@@ -36,9 +36,6 @@ contains
       self%doublevar(:,:) = -1.0_DP
       write(self%stringvar,*) "Initialized in Fortran"
 
-      write(*,*) trim(adjustl(self%stringvar))
-      write(*,*) "The shape is: ", shape(self%doublevar)
-
       return
    end subroutine simulation_allocate
 

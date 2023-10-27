@@ -19,7 +19,6 @@ cdef extern from "simulation.h":
 
 def f2c_string(str f_string):
     # Convert Python string to bytes for compatibility with C char*
-    print("Inside f2c_string")
     f_string_bytes = f_string.encode('utf-8')
 
     # Allocate a buffer with the size of the Fortran string + 1 (for the null terminator)
@@ -71,18 +70,36 @@ cdef class Simulation:
         -------
             Sets the fobj component variable containing the components set by the Fortran object.
         """
-    
+
+        # Check to make sure we are passing a correct 2D array for the shape.
         if len(shape) != 2:
             raise ValueError("Expected a tuple of length 2 for shape")
 
+        print("Cython: calling bind_simulation_init")
         self.fobj = bind_simulation_init(shape[0],shape[1])  
+        print("Cython: Successfully returned")
+
+        # Do some basic checks to make sure the object variable and all its components were allocated succesfully
         if self.fobj is NULL:
             raise MemoryError("Failed to allocate Fortran object.")
-        if self.fobj.stringvar is NULL:
-            raise MemoryError("Failed to initialize string variable in Fortran object.")
+        else:
+            print("The Fortran object was allocated successfully ")
 
+        if self.fobj.doublevar_data is NULL:
+            raise MemoryError("Failed to allocate component variable 'doublevar' in the Fortran object.")
+        else:
+            print("The component variable 'doublevar' was allocated successfuly in the Fortran object")
+
+        if self.fobj.stringvar is NULL:
+            raise MemoryError("Failed to allocate component variable 'stringvar' in the Fortran object.")
+        else:
+            print("The component variable 'stringvar' was allocated successfuly in the Fortran object")
+
+        # Manually set the shape of the 2D component array in the Python object
         self.fobj.doublevar_shape[0] = shape[0]
         self.fobj.doublevar_shape[1] = shape[1]
+
+        return
 
 
     def __dealloc__(self):

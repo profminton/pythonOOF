@@ -54,9 +54,6 @@ cdef class Simulation:
         else:
             print("The component variable 'doublevar' was allocated successfuly in the Fortran object")
 
-        print("fobj points to:", <unsigned long>self.fobj)
-        print("stringvar points to:", <unsigned long>self.fobj.stringvar)
-
         if self.fobj.stringvar is NULL:
             raise MemoryError("Failed to allocate component variable 'stringvar' in the Fortran object.")
         else:

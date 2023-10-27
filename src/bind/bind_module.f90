@@ -131,6 +131,7 @@ contains
             deallocate(f_sim%stringvar)
             f_sim%stringvar = f_string
          end if
+         write(*,*) "The Fortran derived type has received a new string variable value: ",trim(f_sim%stringvar)
       else
          write(*,*) "The c_sim pointer is NULL!"
       end if

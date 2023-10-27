@@ -8,6 +8,8 @@ arr_shape = new_arr_expected.shape
 
 print(f"Initializing the Simulation object with an array with shape {arr_shape}")
 simulation = Simulation(arr_shape)
+
+
 print("Simulation object has been initialized successfully!")
 
 print("Retrieving the current contents of the doublevar variable that was initialized in Fortran to be -1.0")

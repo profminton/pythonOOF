@@ -55,8 +55,10 @@ contains
       end do
       write(*,*) "shape(doublevar): ", shape(f_sim%doublevar)
       c_ptr_var = c_loc(f_sim)
-      write(*,*) "Address of f_sim:", transfer(c_ptr_var, 0_C_INTPTR_T)
+      write(*,*) "Address of f_sim          :", transfer(c_ptr_var, 0_C_INTPTR_T)
       c_ptr_var = c_loc(f_sim%stringvar)
+      write(*,*) "Address of f_sim%doublevar:", transfer(c_ptr_var, 0_C_INTPTR_T)
+      c_ptr_var = c_loc(f_sim%doublevar)
       write(*,*) "Address of f_sim%stringvar:", transfer(c_ptr_var, 0_C_INTPTR_T)
       
       write(*,*) "*************** END FORTRAN *****************"
@@ -95,12 +97,12 @@ contains
       type(c_ptr),           value   :: c_sim  !! C pointer to the simulation structure 
       ! Internals
       type(simulation_type), pointer :: f_sim  !! A pointer to the simulation type variable that will be passed to Cython
-      character(kind=c_char), dimension(:), allocatable, target :: f_str
+      character(kind=c_char), dimension(STRMAX), target :: f_str
 
       if (c_associated(c_sim)) then
          nullify(f_sim)
          call c_f_pointer(c_sim, f_sim)
-         call bind_f2c_string(f_sim%stringvar, f_str)
+         call bind_f2c_string(trim(f_sim%stringvar), f_str)
          bind_simulation_get_stringvar = c_loc(f_str)
       else
          write(*,*) "The c_sim pointer is NULL!"
@@ -121,17 +123,14 @@ contains
       type(c_ptr),                          intent(in), value :: c_sim
       character(kind=c_char), dimension(*), intent(in) :: c_string
       ! Internals
-      character(len=:), allocatable  :: f_string
+      character(len=STRMAX)  :: f_string
       type(simulation_type), pointer :: f_sim
 
       nullify(f_sim)
       if (c_associated(c_sim)) then
          call c_f_pointer(c_sim, f_sim)
          call bind_c2f_string(c_string, f_string)
-         if (allocated(f_sim%stringvar)) then
-            deallocate(f_sim%stringvar)
-            f_sim%stringvar = f_string
-         end if
+         f_sim%stringvar = f_string
          write(*,*) "The Fortran derived type has received a new string variable value: ",trim(f_sim%stringvar)
       else
          write(*,*) "The c_sim pointer is NULL!"
@@ -149,7 +148,7 @@ contains
       implicit none
       ! Arguments
       character(kind=c_char), dimension(*), intent(in)  :: c_string
-      character(len=:), allocatable, intent(out) :: f_string
+      character(len=STRMAX),                intent(out) :: f_string
       ! Internals
       integer :: i
       character(len=STRMAX,kind=c_char) :: tmp_string
@@ -171,23 +170,22 @@ contains
    end subroutine bind_c2f_string
 
 
-   subroutine bind_f2c_string(fstr, cstr)
+   subroutine bind_f2c_string(f_string, c_string)
       !! author: David A. Minton
       !!
       !! This subroutine is used to convert Fortran style strings to C. This allows the Python module to read strings that were 
       !! created in Fortran procedures.
       implicit none
-      character(len=:), allocatable, intent(in) :: fstr
-      character(kind=c_char), dimension(:), allocatable, target, intent(out) :: cstr
+      character(len=*),                                  intent(in)  :: f_string
+      character(kind=c_char), dimension(STRMAX), target, intent(out) :: c_string
          
       integer :: n, i
 
-      n = len(fstr)
-      allocate(cstr(n + 1))
+      n = min(len(f_string), STRMAX-1)
       do i = 1, n
-         cstr(i) = fstr(i:i)
+         c_string(i) = f_string(i:i)
       end do
-      cstr(n + 1) = c_null_char
+      c_string(n + 1) = c_null_char
    end subroutine bind_f2c_string
 
    

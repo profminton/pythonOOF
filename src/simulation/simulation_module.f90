@@ -12,7 +12,7 @@ module simulation
 
    type  :: simulation_type
       real(DP), dimension(:,:), allocatable :: doublevar    !! A placeholder 2D array. 
-      character(len=:),         allocatable :: stringvar    !! A placeholder for a string component variable
+      character(len=STRMAX)                 :: stringvar    !! A placeholder for a string component variable
    contains
       procedure :: allocate   => simulation_allocate   !! Allocate the allocatable components of the class
       procedure :: deallocate => simulation_deallocate !! Deallocate all allocatable components of the class
@@ -49,7 +49,6 @@ contains
       class(simulation_type), intent(inout) :: self     !! Simulation object
 
       deallocate(self%doublevar)
-      deallocate(self%stringvar)
 
       return
    end subroutine simulation_deallocate

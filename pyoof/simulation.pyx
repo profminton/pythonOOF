@@ -4,7 +4,6 @@ from cpython cimport PyUnicode_AsUTF8AndSize, PyUnicode_FromString
 cimport numpy as cnp
 from libc.stdlib cimport malloc, free
 from libc.string cimport memset 
-cdef int STRMAX = 512
 
 cdef extern from "simulation.h":
     ctypedef struct c_simulation_type:
@@ -15,7 +14,7 @@ cdef extern from "simulation.h":
 
     c_simulation_type* bind_simulation_init(int ny, int nx)
     void bind_simulation_final(c_simulation_type *obj)
-    void bind_simulation_set_stringvar(c_simulation_type *obj, char *c_string)
+    void bind_simulation_set_stringvar(c_simulation_type *obj, const char *c_string)
     char* bind_simulation_get_stringvar(c_simulation_type *obj)
 
 
@@ -48,6 +47,9 @@ cdef class Simulation:
             raise MemoryError("Failed to allocate Fortran object.")
         else:
             print("The Fortran object was allocated successfully ")
+        print(f"self.fobj           = {<unsigned long>self.fobj          }")
+        print(f"self.fobj.doublevar = {<unsigned long>self.fobj.doublevar}")
+        print(f"self.fobj.stringvar = {<unsigned long>self.fobj.stringvar}")
 
         if self.fobj.doublevar is NULL:
             raise MemoryError("Failed to allocate component variable 'doublevar' in the Fortran object.")
@@ -170,7 +172,7 @@ cdef class Simulation:
         -------
             None : Sets the values of self.fobj
         """
-        cdef char *c_string
+        cdef const char *c_string
         cdef Py_ssize_t length
 
         c_string = PyUnicode_AsUTF8AndSize(string, &length)

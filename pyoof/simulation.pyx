@@ -6,15 +6,16 @@ from libc.string cimport memset
 cdef int STRMAX = 512
 
 cdef extern from "simulation.h":
-    ctypedef packed struct c_simulation_type:
-        double *doublevar_data
+    ctypedef struct c_simulation_type:
+        double *doublevar
         int doublevar_shape[2]
         char *stringvar
+        int stringvar_len
 
     c_simulation_type* bind_simulation_init(int ny, int nx)
     void bind_simulation_final(c_simulation_type *obj)
-    void bind_c2f_string(char* c_string, char* f_string)
-    void bind_f2c_string(char* f_string, char* c_string)
+    void bind_c2f_string(char* c_string, int c_string_len, char* f_string, int f_string_len)
+    void bind_f2c_string(char* f_string, int f_string_len, char* c_string, int c_string_len)
 
 
 def f2c_string(str f_string):
@@ -27,7 +28,7 @@ def f2c_string(str f_string):
         raise MemoryError("Failed to allocate memory for c_string")
 
     # Call the Fortran subroutine
-    bind_f2c_string(f_string_bytes, c_string)
+    bind_f2c_string(f_string_bytes, len(f_string_bytes), c_string, len(c_string))
 
     # Convert C string (char*) to Python string and free the allocated memory
     result = c_string.decode('utf-8')
@@ -41,7 +42,7 @@ cdef char* c2f_string(str c_string):
     
     # Assume a maximum Fortran string length for buffer allocation.
     # Adjust this length based on your requirements.
-    cdef char* f_string = <char*> malloc(STRMAX * sizeof(char))
+    cdef char* f_string = <char*> malloc(len(c_string_bytes) * sizeof(char))
     if not f_string:
         raise MemoryError("Failed to allocate memory for f_string")
     
@@ -50,7 +51,7 @@ cdef char* c2f_string(str c_string):
     memset(f_string, 32, STRMAX)
     
     # Call the Fortran subroutine
-    bind_c2f_string(c_string_bytes, f_string)
+    bind_c2f_string(c_string_bytes, len(c_string_bytes), f_string, len(f_string))
     
     return f_string
 
@@ -85,10 +86,13 @@ cdef class Simulation:
         else:
             print("The Fortran object was allocated successfully ")
 
-        if self.fobj.doublevar_data is NULL:
+        if self.fobj.doublevar is NULL:
             raise MemoryError("Failed to allocate component variable 'doublevar' in the Fortran object.")
         else:
             print("The component variable 'doublevar' was allocated successfuly in the Fortran object")
+
+        print("fobj points to:", <unsigned long>self.fobj)
+        print("stringvar points to:", <unsigned long>self.fobj.stringvar)
 
         if self.fobj.stringvar is NULL:
             raise MemoryError("Failed to allocate component variable 'stringvar' in the Fortran object.")
@@ -136,7 +140,7 @@ cdef class Simulation:
 
         # Create a NumPy array from the Fortran array
         cdef cnp.ndarray[cnp.float64_t, ndim=2, mode="c"] doublevar_array
-        doublevar_array = cnp.PyArray_SimpleNewFromData(2, shape, cnp.NPY_FLOAT64, <void*>(self.fobj.doublevar_data))
+        doublevar_array = cnp.PyArray_SimpleNewFromData(2, shape, cnp.NPY_FLOAT64, <void*>(self.fobj.doublevar))
 
         return doublevar_array
  
@@ -166,10 +170,10 @@ cdef class Simulation:
         cdef int cols = doublevar_array.shape[1]
 
         # Manually copy data from the NumPy array to the Fortran array
-        cdef double* c_doublevar_data = self.fobj.doublevar_data
+        cdef double* c_doublevar = self.fobj.doublevar
         for row in range(rows):
             for col in range(cols):
-                c_doublevar_data[row * cols + col] = doublevar_array[row, col]
+                c_doublevar[row * cols + col] = doublevar_array[row, col]
 
     def get_stringvar(self):
         """
@@ -208,5 +212,5 @@ cdef class Simulation:
         cdef char* c_string = b_string
 
         # Call Fortran function to convert from C to Fortran
-        bind_c2f_string(c_string, self.fobj.stringvar) 
+        bind_c2f_string(c_string, len(c_string), self.fobj.stringvar, len(c_string)) 
         return

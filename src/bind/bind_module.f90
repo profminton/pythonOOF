@@ -37,7 +37,9 @@ contains
       ! Internals
       type(simulation_type), pointer :: sim_ptr  !! A pointer to the simulation type variable that will be passed to Cython
       integer(I4B) :: i
+      type(c_ptr) :: c_ptr_var
 
+      nullify(sim_ptr)
       allocate(sim_ptr)
       call sim_ptr%allocate(nx, ny) 
       bind_simulation_init = c_loc(sim_ptr)
@@ -52,6 +54,11 @@ contains
          write(*,*) sim_ptr%doublevar(:,i)
       end do
       write(*,*) "shape(doublevar): ", shape(sim_ptr%doublevar)
+      c_ptr_var = c_loc(sim_ptr)
+      write(*,*) "Address of sim_ptr:", transfer(c_ptr_var, 0_C_INTPTR_T)
+      c_ptr_var = c_loc(sim_ptr%stringvar)
+      write(*,*) "Address of sim_ptr%stringvar:", transfer(c_ptr_var, 0_C_INTPTR_T)
+      
       write(*,*) "*************** END FORTRAN *****************"
       write(*,*) 
 
@@ -83,8 +90,8 @@ contains
       !! Fortran functions.
       implicit none
       ! Arguments
-      character(len=1,kind=c_char), intent(in)  :: c_string(*)
-      character(len=*,kind=c_char), intent(out) :: f_string
+      character(kind=c_char), dimension(:), intent(in)  :: c_string
+      character(kind=c_char), dimension(:), intent(out) :: f_string
       ! Internals
       integer :: i
       character(len=STRMAX,kind=c_char) :: tmp_string
@@ -113,8 +120,8 @@ contains
       !! created in Fortran procedures.
       implicit none
       ! Arguments
-      character(len=1,kind=c_char), intent(in) :: f_string(STRMAX)
-      character(len=1,kind=c_char), intent(out) :: c_string(*)
+      character(kind=c_char), dimension(:), intent(in)  :: f_string
+      character(kind=c_char), dimension(:), intent(out) :: c_string
       ! Internals
       integer :: i
 

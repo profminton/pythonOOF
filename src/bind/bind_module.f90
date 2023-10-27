@@ -99,21 +99,20 @@ contains
       !! created in Fortran procedures.
       implicit none
       ! Arguments
-      character(len=*,kind=c_char), intent(in)  :: f_string
+      character(len=1,kind=c_char), intent(in) :: f_string(STRMAX)
       character(len=1,kind=c_char), intent(out) :: c_string(*)
       ! Internals
-      integer :: i, len_f
-   
-      len_f = len_trim(f_string)
-      
-      do i = 1, len_f
-         c_string(i) = f_string(i:i)
+      integer :: i
+
+      i = 1
+      do while (f_string(i) /= c_null_char)
+         c_string(i) = f_string(i)
+         i = i + 1
       end do
-   
-      ! Append null character
-      c_string(len_f + 1) = c_null_char
-   
+      c_string(i) = c_null_char
+      
       return
    end subroutine bind_f2c_string
+
    
 end module bind_module

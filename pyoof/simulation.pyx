@@ -1,9 +1,9 @@
 # cython: language_level=3, c_string_type=unicode, c_string_encoding=ascii
 cimport cython
 cimport numpy as cnp
-import numpy as np
 from libc.stdlib cimport malloc, free
 from libc.string cimport memset 
+cdef int STRMAX = 512
 
 cdef extern from "simulation.h":
     ctypedef packed struct c_simulation_type:
@@ -19,6 +19,7 @@ cdef extern from "simulation.h":
 
 def f2c_string(str f_string):
     # Convert Python string to bytes for compatibility with C char*
+    print("Inside f2c_string")
     f_string_bytes = f_string.encode('utf-8')
 
     # Allocate a buffer with the size of the Fortran string + 1 (for the null terminator)
@@ -41,14 +42,13 @@ cdef char* c2f_string(str c_string):
     
     # Assume a maximum Fortran string length for buffer allocation.
     # Adjust this length based on your requirements.
-    cdef int max_fortran_length = 512
-    cdef char* f_string = <char*> malloc(max_fortran_length * sizeof(char))
+    cdef char* f_string = <char*> malloc(STRMAX * sizeof(char))
     if not f_string:
         raise MemoryError("Failed to allocate memory for f_string")
     
     # Fill buffer with spaces as Fortran strings might be space-padded. 
     # Use 32 as the ASCII value of space, which is more efficient than calling ord(' ')
-    memset(f_string, 32, max_fortran_length)
+    memset(f_string, 32, STRMAX)
     
     # Call the Fortran subroutine
     bind_c2f_string(c_string_bytes, f_string)
@@ -75,10 +75,15 @@ cdef class Simulation:
         if len(shape) != 2:
             raise ValueError("Expected a tuple of length 2 for shape")
 
-        self.fobj = bind_simulation_init(shape[0],shape[1])  # <- I'd like to be able to pass the tuple values as separate arguments if possible
+        self.fobj = bind_simulation_init(shape[0],shape[1])  
+        if self.fobj is NULL:
+            raise MemoryError("Failed to allocate Fortran object.")
+        if self.fobj.stringvar is NULL:
+            raise MemoryError("Failed to initialize string variable in Fortran object.")
 
         self.fobj.doublevar_shape[0] = shape[0]
         self.fobj.doublevar_shape[1] = shape[1]
+
 
     def __dealloc__(self):
         """
@@ -91,10 +96,6 @@ cdef class Simulation:
         -------
             Deallocates the fobj component variables from Fortran.
         """
-        # Free memory for stringvar if it was allocated
-        if self.fobj.stringvar is not NULL:
-            free(self.fobj.stringvar)
-
         if self.fobj is not NULL:
             bind_simulation_final(self.fobj)
 
@@ -143,7 +144,6 @@ cdef class Simulation:
         if new_shape[0] != old_shape[0] or new_shape[1] != old_shape[1]:
             raise ValueError(f"Invalid shape for doublevar array: {new_shape} does not match {old_shape}")
 
-
         # Get the dimensions of the doublevar_array
         cdef int rows = doublevar_array.shape[0]
         cdef int cols = doublevar_array.shape[1]
@@ -153,3 +153,43 @@ cdef class Simulation:
         for row in range(rows):
             for col in range(cols):
                 c_doublevar_data[row * cols + col] = doublevar_array[row, col]
+
+    def get_stringvar(self):
+        """
+        A getter method that retrieves the stringvar from Fortran and returns it as a Python string 
+
+        Parameters
+        ----------
+            None
+        Returns
+        -------
+            string : str
+        """
+        if self.fobj is not NULL and self.fobj.stringvar is not NULL:
+            result = f2c_string(self.fobj.stringvar)
+
+        return result
+
+    
+    def set_stringvar(self, str string):
+        """
+        A setter method that sets the value of the stringvar in Fortran from a Python string. 
+
+        Parameters
+        ----------
+            string : str 
+                Input string
+        Returns
+        -------
+            None : Sets the values of self.fobj
+        """
+
+        # Convert Python string to null-terminated bytes
+        b_string = bytes(string, 'ascii') + b'\x00'
+        
+        # Cast to C string
+        cdef char* c_string = b_string
+
+        # Call Fortran function to convert from C to Fortran
+        bind_c2f_string(c_string, self.fobj.stringvar) 
+        return

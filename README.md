@@ -85,13 +85,13 @@ end module globals
 ```
 
 
-We next Fortran derived-type that contains a 2D allocatable array of double precision floating point values, and an allocatable string. It also contains some type-bound procedures that handle allocation and deallocation
+We next Fortran derived-type that contains a 2D allocatable array of double precision floating point values, and a fixed-length string. It also contains some type-bound procedures that handle allocation and deallocation
 of the allocatables, as well as a finalizer. This defintion is in the file `pythonOOF/src/simulation/simulation_module.f90`
 
 ```Fortran
    type  :: simulation_type
       real(DP), dimension(:,:), allocatable :: doublevar    !! A placeholder 2D array. 
-      character(len=:),         allocatable :: stringvar    !! A placeholder for a string component variable
+      character(len=STRMAX)                 :: stringvar    !! A placeholder for a string component variable
    contains
       procedure :: allocate   => simulation_allocate   !! Allocate the allocatable components of the class
       procedure :: deallocate => simulation_deallocate !! Deallocate all allocatable components of the class
@@ -102,11 +102,115 @@ of the allocatables, as well as a finalizer. This defintion is in the file `pyth
 Due to the allocatable components, this derived type is not C interoperable, so we cannot simply bind `simulation_type` to C to make it work. Therefore we need to write a set of Fortran functions that can bind the component variables
 to C individually. In order to keep the Fortran functionality independent from the Fortran<->Python bridge, we implement our C binding procedures in a separate module defined in `pythonOOF/src/bind/bind_module.f90`.
 
-The `bind` module has several procedures defined. These are:
+The `bind` module provides several procedures for interfacing Cython code with Fortran. These are:
 
-`bind_simulation_init` 
-  : An initializer
+### `bind_simulation_init(ny, nx)`
+
+- **Purpose**: Initializes the `simulation_type` derived type object in Fortran and returns a pointer to the object. This pointer can be used as a C struct and is ultimately linked to the Python class object via Cython.
   
+- **Arguments**:
+  - `ny, nx`: The dimensions of the array to allocate. Note that this expects row-major ordering.
+
+### `bind_simulation_final(sim)`
+
+- **Purpose**: Deallocates the pointer that links the C struct to the Fortran derived type object.
+
+- **Arguments**:
+  - `sim`: A C pointer to the Fortran simulation structure.
+
+### `bind_simulation_get_stringvar(c_sim)`
+
+- **Purpose**: Retrieves the string variable from the Fortran `simulation_type` derived type and passes it to C and ultimately to Python via Cython.
+
+- **Arguments**:
+  - `c_sim`: A C pointer to the Fortran simulation structure.
+
+### `bind_simulation_set_stringvar(c_sim, c_string)`
+
+- **Purpose**: Sets the value of the string variable in the Fortran `simulation_type` derived type.
+
+- **Arguments**:
+  - `c_sim`: A C pointer to the Fortran simulation structure.
+  - `c_string`: A C-style string.
+
+### `bind_c2f_string(c_string, f_string)`
+
+- **Purpose**: Converts C-style strings to Fortran-style strings, enabling Python strings to be passed as arguments to Fortran functions.
+
+- **Arguments**:
+  - `c_string`: An input C-style string.
+  - `f_string`: An output Fortran-style string.
+
+### `bind_f2c_string(f_string, c_string)`
+
+- **Purpose**: Converts Fortran-style strings to C-style strings, allowing Python to read strings that were created in Fortran procedures.
+
+- **Arguments**:
+  - `f_string`: An output Fortran-style string.
+  - `c_string`: An output C-style string.
+
+
+The Cython file `simulation.pyx` (and its companion C header `simulation.h`) define the functions that allow the Python code to interact with Fortran. 
+
+# `simulation.pyx` Documentation
+
+## Import Statements
+
+The Cython code starts by importing necessary modules:
+
+- `cython`
+- `cpython`
+- `numpy` as `cnp`
+- Standard C libraries for memory allocation and string manipulation
+
+## C-External Definitions
+
+The `simulation.h` header is imported and the structure `c_simulation_type` is defined to map to the Fortran derived type. Additionally, the functions `bind_simulation_init`, `bind_simulation_final`, `bind_simulation_set_stringvar`, and `bind_simulation_get_stringvar` are declared.
+
+## `Simulation` Class
+
+This Cython class wraps the Fortran `simulation_type` derived type.
+
+### `__cinit__(self, tuple shape)`
+
+- **Purpose**: Initializes the object by calling Fortran's initializer.
+- **Parameters**: 
+  - `shape`: Shape of the Numpy array to initialize in Fortran
+- **Returns**: Sets the `fobj` class variable.
+
+### `__dealloc__(self)`
+
+- **Purpose**: Deallocates the Fortran object.
+- **Parameters**: None
+- **Returns**: Deallocates `fobj`.
+
+### `get_doublevar(self)`
+
+- **Purpose**: Retrieves the `doublevar` array from Fortran and returns it as a Numpy array.
+- **Parameters**: None
+- **Returns**: 
+  - `doublevar_array`: 2D Numpy array.
+
+### `set_doublevar(self, cnp.ndarray[cnp.float64_t, ndim=2] doublevar_array)`
+
+- **Purpose**: Sets the `doublevar` array in Fortran from a Numpy array.
+- **Parameters**: 
+  - `doublevar_array`: 2D Numpy array
+- **Returns**: None
+
+### `get_stringvar(self)`
+
+- **Purpose**: Retrieves the `stringvar` from Fortran and returns it as a Python string.
+- **Parameters**: None
+- **Returns**: 
+  - `string`: Python string.
+
+### `set_stringvar(self, str string)`
+
+- **Purpose**: Sets the `stringvar` in Fortran from a Python string.
+- **Parameters**: 
+  - `string`: Python string.
+- **Returns**: None
 
 
 

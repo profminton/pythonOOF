@@ -176,9 +176,10 @@ contains
       !! This subroutine is used to convert Fortran style strings to C. This allows the Python module to read strings that were 
       !! created in Fortran procedures.
       implicit none
+      ! Arguments
       character(len=*),                                  intent(in)  :: f_string
       character(kind=c_char), dimension(STRMAX), target, intent(out) :: c_string
-         
+      ! Internals 
       integer :: n, i
 
       n = min(len(f_string), STRMAX-1)

@@ -6,5 +6,5 @@ typedef struct simulation_type {
 }c_simulation_type;
 extern struct simulation_type* bind_simulation_init(int ny, int nx);
 extern void bind_simulation_final(struct simulation_type *obj);
-extern void bind_c2f_string(char* c_string, int c_string_len, char* f_string, int f_string_len);
-extern void bind_f2c_string(char* f_string, int f_string_len, char* c_string, int c_string_len);
+extern void bind_simulation_set_stringvar(struct simulation_type *obj, char *c_string);
+extern char* bind_simulation_get_stringvar(struct simulation_type *obj);

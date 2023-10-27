@@ -35,29 +35,29 @@ contains
       ! Arguments
       integer(I4B),          value   :: ny, nx   !! The dimensions of the array to create. Note, this expects row-major ordering 
       ! Internals
-      type(simulation_type), pointer :: sim_ptr  !! A pointer to the simulation type variable that will be passed to Cython
+      type(simulation_type), pointer :: f_sim  !! A pointer to the simulation type variable that will be passed to Cython
       integer(I4B) :: i
       type(c_ptr) :: c_ptr_var
 
-      nullify(sim_ptr)
-      allocate(sim_ptr)
-      call sim_ptr%allocate(nx, ny) 
-      bind_simulation_init = c_loc(sim_ptr)
+      nullify(f_sim)
+      allocate(f_sim)
+      call f_sim%allocate(nx, ny) 
+      bind_simulation_init = c_loc(f_sim)
 
       write(*,*) 
       write(*,*) "***************** FORTRAN *******************"
       write(*,*) "Inside bind_simulation_init" 
-      write(*,*) "stringvar       : ",trim(adjustl(sim_ptr%stringvar))
-      write(*,*) "len(stringvar)  : ",len(sim_ptr%stringvar)
+      write(*,*) "stringvar       : ",trim(adjustl(f_sim%stringvar))
+      write(*,*) "len(stringvar)  : ",len(f_sim%stringvar)
       write(*,*) "doublevar       : "
       do i = 1,ny
-         write(*,*) sim_ptr%doublevar(:,i)
+         write(*,*) f_sim%doublevar(:,i)
       end do
-      write(*,*) "shape(doublevar): ", shape(sim_ptr%doublevar)
-      c_ptr_var = c_loc(sim_ptr)
-      write(*,*) "Address of sim_ptr:", transfer(c_ptr_var, 0_C_INTPTR_T)
-      c_ptr_var = c_loc(sim_ptr%stringvar)
-      write(*,*) "Address of sim_ptr%stringvar:", transfer(c_ptr_var, 0_C_INTPTR_T)
+      write(*,*) "shape(doublevar): ", shape(f_sim%doublevar)
+      c_ptr_var = c_loc(f_sim)
+      write(*,*) "Address of f_sim:", transfer(c_ptr_var, 0_C_INTPTR_T)
+      c_ptr_var = c_loc(f_sim%stringvar)
+      write(*,*) "Address of f_sim%stringvar:", transfer(c_ptr_var, 0_C_INTPTR_T)
       
       write(*,*) "*************** END FORTRAN *****************"
       write(*,*) 
@@ -74,24 +74,80 @@ contains
       ! Arguments
       type(c_ptr), intent(in), value :: sim
       ! Internals
-      type(simulation_type), pointer :: sim_ptr
+      type(simulation_type), pointer :: f_sim
 
-      call c_f_pointer(sim, sim_ptr)
-      deallocate(sim_ptr)
+      if (c_associated(sim)) then
+         call c_f_pointer(sim, f_sim)
+         deallocate(f_sim)
+      end if
 
       return
    end subroutine bind_simulation_final
 
 
-   subroutine bind_c2f_string(c_string, f_string) bind(c)
+   type(c_ptr) function bind_simulation_get_stringvar(c_sim) bind(c)
+      !! author: David A. Minton
+      !!
+      !! This function is used to retrieve the string variable from the Fortran simulation derived-type and pass it to a to C, and
+      !! ultimately to the Python string variable via Cython.
+      implicit none
+      ! Arguments
+      type(c_ptr),           value   :: c_sim  !! C pointer to the simulation structure 
+      ! Internals
+      type(simulation_type), pointer :: f_sim  !! A pointer to the simulation type variable that will be passed to Cython
+      character(kind=c_char), dimension(:), allocatable, target :: f_str
+
+      if (c_associated(c_sim)) then
+         nullify(f_sim)
+         call c_f_pointer(c_sim, f_sim)
+         call bind_f2c_string(f_sim%stringvar, f_str)
+         bind_simulation_get_stringvar = c_loc(f_str)
+      else
+         write(*,*) "The c_sim pointer is NULL!"
+         bind_simulation_get_stringvar = c_null_ptr
+      end if
+
+      return
+   end function bind_simulation_get_stringvar
+
+
+   subroutine bind_simulation_set_stringvar(c_sim, c_string) bind(c)
+      !! author: David A. Minton
+      !!
+      !! This subroutine is used to deallocate the pointer that links the C struct to the Fortran derived type object. 
+      implicit none
+      ! Arguments
+      type(c_ptr),                          intent(in), value :: c_sim
+      character(kind=c_char), dimension(*), intent(in) :: c_string
+      ! Internals
+      character(len=:), allocatable  :: f_string
+      type(simulation_type), pointer :: f_sim
+
+      nullify(f_sim)
+      if (c_associated(c_sim)) then
+         call c_f_pointer(c_sim, f_sim)
+         call bind_c2f_string(c_string, f_string) ! <-- Error occurs here
+         if (allocated(f_sim%stringvar)) then
+            deallocate(f_sim%stringvar)
+            f_sim%stringvar = f_string
+         end if
+      else
+         write(*,*) "The c_sim pointer is NULL!"
+      end if
+
+      return
+   end subroutine bind_simulation_set_stringvar
+
+
+   subroutine bind_c2f_string(c_string, f_string) 
       !! author: David A. Minton
       !!
       !! This subroutine is used to convert C style strings into Fortran. This allows one to pass Python strings as arguments to 
       !! Fortran functions.
       implicit none
       ! Arguments
-      character(kind=c_char), dimension(:), intent(in)  :: c_string
-      character(kind=c_char), dimension(:), intent(out) :: f_string
+      character(kind=c_char), dimension(*), intent(in)  :: c_string
+      character(len=:,kind=c_char), allocatable, intent(out) :: f_string
       ! Internals
       integer :: i
       character(len=STRMAX,kind=c_char) :: tmp_string
@@ -113,26 +169,23 @@ contains
    end subroutine bind_c2f_string
 
 
-   subroutine bind_f2c_string(f_string, c_string) bind(c)
+   subroutine bind_f2c_string(fstr, cstr)
       !! author: David A. Minton
       !!
       !! This subroutine is used to convert Fortran style strings to C. This allows the Python module to read strings that were 
       !! created in Fortran procedures.
       implicit none
-      ! Arguments
-      character(kind=c_char), dimension(:), intent(in)  :: f_string
-      character(kind=c_char), dimension(:), intent(out) :: c_string
-      ! Internals
-      integer :: i
+      character(len=:, kind=c_char), allocatable, intent(in) :: fstr
+      character(kind=c_char), dimension(:), allocatable, target, intent(out) :: cstr
+         
+      integer :: n, i
 
-      i = 1
-      do while (f_string(i) /= c_null_char)
-         c_string(i) = f_string(i)
-         i = i + 1
+      n = len(fstr)
+      allocate(cstr(n + 1))
+      do i = 1, n
+         cstr(i) = fstr(i:i)
       end do
-      c_string(i) = c_null_char
-      
-      return
+      cstr(n + 1) = c_null_char
    end subroutine bind_f2c_string
 
    

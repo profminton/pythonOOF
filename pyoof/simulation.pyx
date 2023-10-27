@@ -1,5 +1,6 @@
 # cython: language_level=3, c_string_type=unicode, c_string_encoding=ascii
 cimport cython
+from cpython cimport PyUnicode_AsUTF8AndSize, PyUnicode_FromString
 cimport numpy as cnp
 from libc.stdlib cimport malloc, free
 from libc.string cimport memset 
@@ -14,46 +15,8 @@ cdef extern from "simulation.h":
 
     c_simulation_type* bind_simulation_init(int ny, int nx)
     void bind_simulation_final(c_simulation_type *obj)
-    void bind_c2f_string(char* c_string, int c_string_len, char* f_string, int f_string_len)
-    void bind_f2c_string(char* f_string, int f_string_len, char* c_string, int c_string_len)
-
-
-def f2c_string(str f_string):
-    # Convert Python string to bytes for compatibility with C char*
-    f_string_bytes = f_string.encode('utf-8')
-
-    # Allocate a buffer with the size of the Fortran string + 1 (for the null terminator)
-    cdef char* c_string = <char*> malloc((len(f_string_bytes) + 1) * sizeof(char))
-    if not c_string:
-        raise MemoryError("Failed to allocate memory for c_string")
-
-    # Call the Fortran subroutine
-    bind_f2c_string(f_string_bytes, len(f_string_bytes), c_string, len(c_string))
-
-    # Convert C string (char*) to Python string and free the allocated memory
-    result = c_string.decode('utf-8')
-    free(c_string)
-
-    return result
-
-cdef char* c2f_string(str c_string):
-    # Convert Python string to bytes for compatibility with C char*
-    c_string_bytes = c_string.encode('utf-8')
-    
-    # Assume a maximum Fortran string length for buffer allocation.
-    # Adjust this length based on your requirements.
-    cdef char* f_string = <char*> malloc(len(c_string_bytes) * sizeof(char))
-    if not f_string:
-        raise MemoryError("Failed to allocate memory for f_string")
-    
-    # Fill buffer with spaces as Fortran strings might be space-padded. 
-    # Use 32 as the ASCII value of space, which is more efficient than calling ord(' ')
-    memset(f_string, 32, STRMAX)
-    
-    # Call the Fortran subroutine
-    bind_c2f_string(c_string_bytes, len(c_string_bytes), f_string, len(f_string))
-    
-    return f_string
+    void bind_simulation_set_stringvar(c_simulation_type *obj, char *c_string)
+    char* bind_simulation_get_stringvar(c_simulation_type *obj)
 
 
 cdef class Simulation:
@@ -186,10 +149,16 @@ cdef class Simulation:
         -------
             string : str
         """
-        if self.fobj is not NULL and self.fobj.stringvar is not NULL:
-            result = f2c_string(self.fobj.stringvar)
-
-        return result
+        cdef char *c_string
+        c_string = bind_simulation_get_stringvar(self.fobj)
+        
+        if c_string == NULL:
+            return None
+        else:
+            py_string = PyUnicode_FromString(c_string)
+            # Don't forget to free the C string if allocated in Fortran
+            #free(c_string)
+            return py_string
 
     
     def set_stringvar(self, str string):
@@ -204,13 +173,8 @@ cdef class Simulation:
         -------
             None : Sets the values of self.fobj
         """
+        cdef char *c_string
+        cdef Py_ssize_t length
 
-        # Convert Python string to null-terminated bytes
-        b_string = bytes(string, 'ascii') + b'\x00'
-        
-        # Cast to C string
-        cdef char* c_string = b_string
-
-        # Call Fortran function to convert from C to Fortran
-        bind_c2f_string(c_string, len(c_string), self.fobj.stringvar, len(c_string)) 
-        return
+        c_string = PyUnicode_AsUTF8AndSize(string, &length)
+        bind_simulation_set_stringvar(self.fobj, c_string)

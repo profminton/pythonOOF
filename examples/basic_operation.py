@@ -40,16 +40,15 @@ new_str_expected = "Modified in Python"
 
 print(f"Initialized string variable should say: {init_str_expected}")
 init_str_retrieved = simulation.get_stringvar()
-print(f"Retrieved: {init_str_retrieved}")
+print(f"Retrieved string variable says        : {init_str_retrieved}")
 assert init_str_retrieved == init_str_expected, "Initial string value does not match"
 print("Initial string variable matches")
 
 # Set a new value for the string
+print(f"New string variable should say: {new_str_expected}")
 simulation.set_stringvar(new_str_expected)
-
 new_str_retrieved = simulation.get_stringvar()
-print("String Data:")
-print(new_str_retrieved)
+print(f"Retrieved string variable says: {new_str_retrieved}")
 
 assert new_str_retrieved == new_str_expected, "String variable does not match."
 print("String variable matches.")

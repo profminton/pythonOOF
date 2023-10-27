@@ -49,6 +49,7 @@ contains
       class(simulation_type), intent(inout) :: self     !! Simulation object
 
       deallocate(self%doublevar)
+      deallocate(self%stringvar)
 
       return
    end subroutine simulation_deallocate

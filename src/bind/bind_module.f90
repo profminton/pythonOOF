@@ -126,7 +126,7 @@ contains
       nullify(f_sim)
       if (c_associated(c_sim)) then
          call c_f_pointer(c_sim, f_sim)
-         call bind_c2f_string(c_string, f_string) ! <-- Error occurs here
+         call bind_c2f_string(c_string, f_string)
          if (allocated(f_sim%stringvar)) then
             deallocate(f_sim%stringvar)
             f_sim%stringvar = f_string

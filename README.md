@@ -50,7 +50,65 @@ PythonOOF is a working example of how one could go about building a software bri
 
 ## How it works
 PythonOOF is a complete project that can be built and installed using a simple `pip install .` command, and therefore contains a number of files that are not strictly relevant to the Python-Fortran bridge.
-This section will focus on only those components of the project
+This section will focus on only those components of the project that are relevant for the main problem.
+
+Our basic problem is this: We want to use the Object Oriented Programming features of Modern Fortran (heretofore referred to as OOF) in a Fortran library that can be seemlessly accessed by a Python script. 
+Fortran and Python have some fundamental differences in how data is represented in the two languages, particularly in how the two language represent multi-dimensional arrays and strings. We use Cython to act 
+as an an intermediary between the two language, and so our Fortran code will make use of the `iso_c_binding` intrinsic module to allow our Fortran code to communicate with the C code that Cython generates.
+
+We start by defining some data types that will be used throughout the Fortran codebase. To aid in the ease of conversion between the Fortran and Cython, we define the double precision type using `iso_c_binding` 
+type definitions.  These are found in `pythonOOF/src/globals/globals_module.f90`:
+
+```Fortran
+module globals
+   !! author: David A. Minton
+   !!
+   !! Basic parameters, definitions, and global type definitions used throughout the PyOOF project
+   use, intrinsic :: iso_c_binding  ! Use the intrinsic kind definitions
+   implicit none
+   public
+
+   integer, parameter :: I8B = c_int_least64_t !! Symbolic name for kind types of 8-byte integers
+   integer, parameter :: I4B = c_int_least32_t !! Symbolic name for kind types of 4-byte integers
+   integer, parameter :: I2B = c_int_least16_t !! Symbolic name for kind types of 2-byte integers
+   integer, parameter :: I1B = c_int_least8_t  !! Symbolic name for kind types of 1-byte integers
+
+   integer, parameter :: SP = c_float  !! Symbolic name for kind types of single-precision reals
+   integer, parameter :: DP = c_double  !! Symbolic name for kind types of double-precision reals
+   integer, parameter :: QP = c_long_double !! Symbolic name for kind types of quad-precision reals
+
+   character(*,kind=c_char), parameter :: VERSION = "2023.10.0" !! Cratermaker version
+
+   integer(I4B), parameter :: STRMAX = 512 !! Maximum size of character strings 
+
+end module globals
+```
+
+
+We next Fortran derived-type that contains a 2D allocatable array of double precision floating point values, and an allocatable string. It also contains some type-bound procedures that handle allocation and deallocation
+of the allocatables, as well as a finalizer. This defintion is in the file `pythonOOF/src/simulation/simulation_module.f90`
+
+```Fortran
+   type  :: simulation_type
+      real(DP), dimension(:,:), allocatable :: doublevar    !! A placeholder 2D array. 
+      character(len=:),         allocatable :: stringvar    !! A placeholder for a string component variable
+   contains
+      procedure :: allocate   => simulation_allocate   !! Allocate the allocatable components of the class
+      procedure :: deallocate => simulation_deallocate !! Deallocate all allocatable components of the class
+      final     ::               simulation_final      !! Finalizer (calls deallocate)
+   end type simulation_type
+```
+
+Due to the allocatable components, this derived type is not C interoperable, so we cannot simply bind `simulation_type` to C to make it work. Therefore we need to write a set of Fortran functions that can bind the component variables
+to C individually. In order to keep the Fortran functionality independent from the Fortran<->Python bridge, we implement our C binding procedures in a separate module defined in `pythonOOF/src/bind/bind_module.f90`.
+
+The `bind` module has several procedures defined. These are:
+
+`bind_simulation_init` 
+  : An initializer
+  
+
+
 
 ## Installation
 
@@ -69,62 +127,9 @@ cd pythonOOF
 pip install .
 ```
 
-# Example
-A basic example of how the code operates is included in `pythonOOF/examples`
+## Example
+A basic example of how the code operates is included in `pythonOOF/examples/basic_operation.py`. This is a Python script that will instantiate a Python class that contains the Fortran derived type as a component variable. 
+It will show how one can manipulate the components of the Fortran object in either Fortran or Python and confirm that the conversions between the two data structures are handled correctly.
 
-```python
-import numpy as np
-from pyoof import Simulation  
-
-# Define some values to test
-new_arr_expected = np.array([[1.0, 2.0, 3.0, 4.0], [5.0, 6.0, 7.0, 8.0], [9.0, 10.0, 11.0, 12.0]], dtype=np.float64)
-init_arr_expected = -np.ones_like(new_arr_expected, dtype=np.float64)
-arr_shape = new_arr_expected.shape
-init_str_expected = "Initialized in Fortran"
-new_str_expected = "Modified in Python"
-
-print(f"Initializing the Simulation object with an array with shape {arr_shape}")
-simulation = Simulation(arr_shape)
-print("Simulation object has been initialized successfully!")
-
-print("Retrieving the current contents of the doublevar variable that was initialized in Fortran to be -1.0")
-init_arr_retrieved = simulation.get_doublevar()
-print("Variable retrieval succeeded!\nHere are the properties of the retrieved array:")
-print(f"Type:  {type(init_arr_retrieved)}")
-print(f"Shape: {init_arr_retrieved.shape}")
-print(f"Size:  {init_arr_retrieved.size}")
-print(f"Value: {init_arr_retrieved}")
-assert np.array_equal(init_arr_retrieved, init_arr_expected), "Initial array value does not match expected"
-print("Initial array values match")
-
-init_str_retrieved = simulation.get_stringvar()
-print(f"Initialized string variable should say: {init_str_expected}")
-print(f"Retrieved: {init_str_retrieved}")
-assert init_str_retrieved == init_str_expected, "Initial string value does not match"
-print("Initial string variable matches")
-
-# Set the elevation data using the set_doublevar method
-simulation.set_doublevar(new_arr_expected)
-
-# Set a new value for the string
-simulation.set_stringvar(new_str_expected)
-
-# Retrieve and print the array data using the get_doublevar method
-new_arr_retrieved = simulation.get_doublevar()
-print("Array Data:")
-print(new_arr_retrieved)
-
-new_str_retrieved = simulation.get_stringvar()
-print("String Data:")
-print(new_str_retrieved)
-
-# Verify that the retrieved data matches the original data
-assert np.array_equal(new_arr_retrieved, new_arr_expected), "Array data does not match."
-print("Array data matches.")
-
-assert new_str_retrieved == new_str_expected, "String variable does not match."
-print("String variable matches.")
-
-```
 
 

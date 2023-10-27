@@ -114,7 +114,8 @@ contains
    subroutine bind_simulation_set_stringvar(c_sim, c_string) bind(c)
       !! author: David A. Minton
       !!
-      !! This subroutine is used to deallocate the pointer that links the C struct to the Fortran derived type object. 
+      !! This subroutine is used to set value of the string variable in the Fortran simulation derived-type. It takes a C-style 
+      !! string and converts it to a Fortran-style string 
       implicit none
       ! Arguments
       type(c_ptr),                          intent(in), value :: c_sim

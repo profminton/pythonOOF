@@ -33,7 +33,7 @@ contains
       !! that can be used as a struct in C, and ultimately to the Python class object via Cython.
       implicit none
       ! Arguments
-      integer(I4B),          value   :: ny, nx   !! The dimensions of the array to create. Note, this expects row-major ordering 
+      integer(I4B), value   :: ny, nx !! The dimensions of the array to create. Note, this expects row-major ordering like C
       ! Internals
       type(simulation_type), pointer :: f_sim  !! A pointer to the simulation type variable that will be passed to Cython
       integer(I4B) :: i
@@ -74,7 +74,7 @@ contains
       !! This subroutine is used to deallocate the pointer that links the C struct to the Fortran derived type object. 
       implicit none
       ! Arguments
-      type(c_ptr), intent(in), value :: sim
+      type(c_ptr), intent(in), value :: sim !! C pointer to the Fortran simulation object
       ! Internals
       type(simulation_type), pointer :: f_sim
 
@@ -94,7 +94,7 @@ contains
       !! ultimately to the Python string variable via Cython.
       implicit none
       ! Arguments
-      type(c_ptr),           value   :: c_sim  !! C pointer to the simulation structure 
+      type(c_ptr), value :: c_sim  !! C pointer to the Fortran simulation object
       ! Internals
       type(simulation_type), pointer :: f_sim  !! A pointer to the simulation type variable that will be passed to Cython
       character(kind=c_char), dimension(STRMAX), target :: f_str
@@ -120,8 +120,8 @@ contains
       !! string and converts it to a Fortran-style string 
       implicit none
       ! Arguments
-      type(c_ptr),                          intent(in), value :: c_sim
-      character(kind=c_char), dimension(*), intent(in) :: c_string
+      type(c_ptr), value,                   intent(in) :: c_sim  !! C pointer to the Fortran simulation object
+      character(kind=c_char), dimension(*), intent(in) :: c_string  !! Input C-style string
       ! Internals
       character(len=STRMAX)  :: f_string
       type(simulation_type), pointer :: f_sim
@@ -147,8 +147,8 @@ contains
       !! Fortran functions.
       implicit none
       ! Arguments
-      character(kind=c_char), dimension(*), intent(in)  :: c_string
-      character(len=STRMAX),                intent(out) :: f_string
+      character(kind=c_char), dimension(*), intent(in)  :: c_string  !! Input C-style string
+      character(len=STRMAX),                intent(out) :: f_string  !! Output Fortran-style string
       ! Internals
       integer :: i
       character(len=STRMAX,kind=c_char) :: tmp_string
@@ -177,8 +177,8 @@ contains
       !! created in Fortran procedures.
       implicit none
       ! Arguments
-      character(len=*),                                  intent(in)  :: f_string
-      character(kind=c_char), dimension(STRMAX), target, intent(out) :: c_string
+      character(len=*) :: f_string  !! Input Fortran-style string
+      character(kind=c_char), dimension(STRMAX), target :: c_string  !! Output C-style string (array of C characters)
       ! Internals 
       integer :: n, i
 

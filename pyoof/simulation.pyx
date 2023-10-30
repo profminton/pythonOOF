@@ -5,6 +5,11 @@ cimport numpy as cnp
 from libc.stdlib cimport malloc, free
 from libc.string cimport memset 
 
+"""
+    The definitions below provides the Cython versions of the definitions found in the C header. They should exactly mirror the contents of header.h, just with a modified Cython syntax.
+
+    One important note: In order to map the data structure from Python/Cython to Fortran, it is important that the order in which component variables are defined is the same here, as it is in `header.h` and `simulation_module.f90`. The only difference between the struct definition here and the type definition in Fortran is that the allocatable arrays require a "hidden" shape (or length) variable in the Cython and C definitions that immediately follow the pointer to the data itself, hence the need for a definition of *doublevar and doublevar_shape[2] for the allocatable doublevar(:,:) in Fortran.
+"""
 cdef extern from "simulation.h":
     ctypedef struct c_simulation_type:
         double *doublevar
@@ -18,7 +23,12 @@ cdef extern from "simulation.h":
     char* bind_simulation_get_stringvar(c_simulation_type *obj)
 
 
-cdef class Simulation:
+cdef class _SimulationBind:
+    """
+    This defines the class that contains all of the methods and variables used to bind Cython to Fortran. It is not meant to be used direclty, but instead serves as an intermediary. 
+
+    """
+
     cdef c_simulation_type* fobj
 
     def __cinit__(self, tuple shape):
@@ -56,7 +66,7 @@ cdef class Simulation:
         else:
             print("The component variable 'doublevar' was allocated successfuly in the Fortran object")
 
-        if self.fobj.stringvar is NULL: # <- This is where the problem lies
+        if self.fobj.stringvar is NULL: 
             raise MemoryError("Failed to allocate component variable 'stringvar' in the Fortran object.")
         else:
             print("The component variable 'stringvar' was allocated successfuly in the Fortran object")
@@ -75,9 +85,6 @@ cdef class Simulation:
         Parameters
         ----------
             None
-        Returns
-        -------
-            Deallocates the fobj component variables from Fortran.
         """
         if self.fobj is not NULL:
             bind_simulation_final(self.fobj)
@@ -155,12 +162,10 @@ cdef class Simulation:
             return None
         else:
             py_string = PyUnicode_FromString(c_string)
-            # Don't forget to free the C string if allocated in Fortran
-            #free(c_string)
             return py_string
 
     
-    def set_stringvar(self, str string):
+    def set_stringvar(self, str string_value):
         """
         A setter method that sets the value of the stringvar in Fortran from a Python string. 
 
@@ -175,5 +180,37 @@ cdef class Simulation:
         cdef const char *c_string
         cdef Py_ssize_t length
 
-        c_string = PyUnicode_AsUTF8AndSize(string, &length)
+        c_string = PyUnicode_AsUTF8AndSize(string_value, &length)
         bind_simulation_set_stringvar(self.fobj, c_string)
+    
+
+
+class Simulation:
+    """
+    This defines the class that enapsulates the Cython intermediary class into a Python class. In a real-world version of this code, consider implementing this in its own separate Python file to isolate the Python implementation from the Cython one. This allows us to create extendable pure Python objects that make use of our Cython bridge to the Fortran library
+    """
+    def __init__(self, tuple shape):
+        self.c_simulation = _SimulationBind(shape)
+
+    @property
+    def doublevar(self):
+        return self.c_simulation.fobj.doublevar
+    
+    @property
+    def stringvar(self):
+        return self.c_simulation.fobj.stringvar
+
+    def get_doublevar(self):
+        return self.c_simulation.get_doublevar()
+    
+    def set_doublevar(self, doublevar_array):
+        self.c_simulation.set_doublevar(doublevar_array)
+
+    def get_stringvar(self):
+        return self.c_simulation.get_stringvar()
+    
+    def set_stringvar(self, string_value):
+        self.c_simulation.set_stringvar(string_value)
+
+
+
